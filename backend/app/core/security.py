@@ -1,4 +1,5 @@
 from fastapi import Request, HTTPException
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import time
 
@@ -48,7 +49,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 self.counts[client_ip] = (1, now)
             else:
                 if requests >= self.max_requests:
-                    raise HTTPException(status_code=429, detail="Too many requests. Recalibrating cluster access.")
+                    return JSONResponse(
+                        status_code=429,
+                        content={"detail": "Too many requests. Recalibrating cluster access."}
+                    )
                 self.counts[client_ip] = (requests + 1, last_reset)
         else:
             self.counts[client_ip] = (1, now)
