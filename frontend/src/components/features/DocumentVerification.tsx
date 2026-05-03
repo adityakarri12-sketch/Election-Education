@@ -163,14 +163,14 @@ export const DocumentVerification = () => {
                   </div>
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">System Status</p>
-                    <h4 className="text-xl font-black text-white">{result.status}</h4>
+                    <h4 className="text-xl font-black text-white">{String(result.status)}</h4>
                   </div>
                 </div>
 
                 <div className="p-6 bg-white/5 border border-white/10 rounded-[2rem]">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Extracted Intelligence</p>
                   <div className="max-h-32 overflow-y-auto text-xs text-slate-300 font-medium leading-relaxed scrollbar-thin scrollbar-thumb-white/10">
-                    {result.extracted_data || "No readable biometric text found in document. Please ensure high-contrast mock ID."}
+                    {result.extracted_data ? String(result.extracted_data) : "No readable biometric text found in document. Please ensure high-contrast mock ID."}
                   </div>
                 </div>
 

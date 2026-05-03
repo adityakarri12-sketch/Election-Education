@@ -73,7 +73,9 @@ export const ElectionDashboard = () => {
 
         if (res.ok) {
           const lb = await res.json();
-          setLeaderboard(lb);
+          if (lb && lb.data) {
+            setLeaderboard(lb.data);
+          }
         }
       } catch {
         console.error("Leaderboard fetch error");

@@ -1,99 +1,95 @@
+"""
+Service for managing electoral intelligence business logic.
+Coordinates between AI repository and caching layers.
+"""
+
 import logging
-from typing import Any, Dict, List, Optional
-from app.services.ai_cluster import IntelligenceCache
+from typing import List
+
 from app.repositories.ai_repository import AIRepository
-from app.core.config import settings
+from app.schemas.intelligence import (
+    BoothInfo,
+    ConstituencyPulse,
+    ElectionInfo,
+    LiveIntelligence,
+    ResultSummary,
+)
+from app.services.ai_cluster import IntelligenceCache
+from app.utils.sanitizer import PromptSanitizer
+
 
 class IntelligenceService:
     """
-    Service: Electoral Intelligence Management.
-    Handles business logic for data generation, caching, and multi-lingual support.
+    Manages electoral intelligence generation and validation.
+
+    This service ensures all data returned to the API is structured,
+    cached for performance, and has high-fidelity fallbacks.
     """
-    def __init__(self, repository: AIRepository, cache: IntelligenceCache):
+
+    def __init__(self, repository: AIRepository, cache: IntelligenceCache) -> None:
         """
-        Initializes the service with a repository and cache.
+        Initializes the service.
 
         Args:
-            repository (AIRepository): The data access layer for AI.
-            cache (IntelligenceCache): The performance optimization layer.
+            repository (AIRepository): Data access layer for AI.
+            cache (IntelligenceCache): Caching layer.
         """
         self.repository = repository
         self.cache = cache
+        self.logger = logging.getLogger(__name__)
 
-    async def get_live_intelligence(self) -> Dict[str, Any]:
+    async def get_live_intelligence(self) -> LiveIntelligence:
         """
-        Retrieves real-time election intelligence with fallback support.
+        Retrieves real-time election reports.
 
         Returns:
-            Dict[str, Any]: A report containing upcoming elections and results.
+            LiveIntelligence: Structured report of upcoming/past elections.
         """
         cached = self.cache.get("live_intel")
         if isinstance(cached, dict):
-            return cached
+            return LiveIntelligence(**cached)
 
         prompt = (
             "Generate a high-fidelity JSON report for May 2026 Indian elections. "
             "Include 'upcoming_elections' (list of {title, date, type}), "
-            "'upcoming_results' (list), and 'past_results' (list). "
-            "Focus on accuracy and official formatting."
+            "'upcoming_results' (list), and 'past_results' (list of {title, summary})."
         )
-        
+
         try:
             data = await self.repository.fetch_json_data(prompt, temperature=0.2)
             self.cache.set("live_intel", data)
-            return data
+            return LiveIntelligence(**data)
         except Exception as e:
-            logging.error(f"Intelligence Generation Failure: {str(e)}")
-            return self._get_live_intelligence_fallback()
+            self.logger.error("Live Intelligence Failure: %s", str(e))
+            return self._get_live_fallback()
 
-    async def get_constituency_pulse(self, pincode: str) -> Dict[str, Any]:
+    async def get_constituency_pulse(self, pincode: str) -> ConstituencyPulse:
         """
-        Maps a pincode to electoral data with format validation.
+        Maps a pincode to electoral representatives.
 
         Args:
             pincode (str): The 6-digit Indian Pincode.
 
         Returns:
-            Dict[str, Any]: Electoral representatives and booth data.
-
-        Raises:
-            ValueError: If the pincode format is invalid.
+            ConstituencyPulse: Data regarding local representatives.
         """
         if not pincode.isdigit() or len(pincode) != 6:
-            raise ValueError("Invalid Indian Pincode format. Must be 6 numeric digits.")
+            raise ValueError("Invalid pincode format.")
 
-        prompt = (
-            f"Generate a detailed JSON report for Indian Pincode {pincode}. "
-            "Fields: name, state, mp, mla, district, booths (int), turnout (string), status (Active/Upcoming)."
-        )
-        
+        # Security: Sanitize the pincode input
+        safe_pincode = PromptSanitizer.sanitize(pincode, max_length=6)
+        prompt = f"Generate JSON electoral report for Indian Pincode {safe_pincode}."
+
         try:
-            return await self.repository.fetch_json_data(prompt, temperature=0.1)
+            data = await self.repository.fetch_json_data(prompt, temperature=0.1)
+            return ConstituencyPulse(**data)
         except Exception as e:
-            logging.error(f"Constituency Pulse Failure for {pincode}: {str(e)}")
-            return self._get_constituency_fallback(pincode)
-
-    async def translate_content(self, text: str, target_lang: str) -> str:
-        """
-        Translates electoral education content via AI repository.
-
-        Args:
-            text (str): The source text.
-            target_lang (str): Target ISO language code.
-
-        Returns:
-            str: Translated text or original if failure occurs.
-        """
-        prompt = f"Translate the following electoral text to {target_lang}: {text}. Maintain formal and educational tone."
-        try:
-            return await self.repository.fetch_text_data(prompt, temperature=0.1)
-        except Exception as e:
-            logging.error(f"Translation Failure: {str(e)}")
-            return f"[Service Temporarily Unavailable] {text}"
+            self.logger.error("Constituency Failure for %s: %s", pincode, str(e))
+            return self._get_pincode_fallback(pincode)
 
     async def chat_with_assistant(self, message: str) -> str:
         """
-        Handles conversational AI for electoral education.
+        Conversational assistant for electoral education.
 
         Args:
             message (str): User query.
@@ -101,58 +97,66 @@ class IntelligenceService:
         Returns:
             str: AI-generated response.
         """
-        system_context = (
-            "You are Electra, a specialized AI Electoral Assistant. "
-            "Provide accurate, non-partisan information about Indian elections."
-        )
-        prompt = f"{system_context}\nUser Query: {message}"
+        # Security: Sanitize user input before processing
+        safe_message = PromptSanitizer.sanitize(message)
         
+        context = "You are Electra, a non-partisan AI Electoral Assistant."
+        prompt = f"{context}\nUser Query: {safe_message}"
+
         try:
             return await self.repository.fetch_text_data(prompt, temperature=0.7)
         except Exception as e:
-            logging.error(f"Chat Assistant Failure: {str(e)}")
-            return "I am currently recalibrating my intelligence nodes. Please retry shortly."
+            self.logger.error("Chat Failure: %s", str(e))
+            return "Intelligence nodes recalibrating. Please retry shortly."
 
-    def _get_live_intelligence_fallback(self) -> Dict[str, Any]:
-        """Internal helper for high-fidelity fallback data."""
-        return {
-            "upcoming_elections": [
-                {"title": "West Bengal Assembly", "date": "May 2026", "type": "Assembly"},
-                {"title": "Tamil Nadu Assembly", "date": "May 2026", "type": "Assembly"}
-            ],
-            "upcoming_results": [],
-            "past_results": [
-                {"title": "General Elections 2024", "summary": "NDA Alliance formed the government."}
-            ]
-        }
-
-    async def get_nearby_booths(self, pincode: str) -> List[Dict[str, Any]]:
+    async def get_nearby_booths(self, pincode: str) -> List[BoothInfo]:
         """
-        Retrieves a list of nearby polling booths for a given pincode.
+        Retrieves nearby polling booths.
 
         Args:
-            pincode (str): The 6-digit Indian Pincode.
+            pincode (str): User pincode.
 
         Returns:
-            List[Dict[str, Any]]: List of booth locations and metadata.
+            List[BoothInfo]: List of booth locations.
         """
-        # Mock booth data for simulation
+        # Simulated data for performance
         return [
-            {"id": 1, "name": "Government Primary School", "distance": "0.4 km", "status": "Active"},
-            {"id": 2, "name": "Community Center Hall", "distance": "1.2 km", "status": "Active"},
-            {"id": 3, "name": "Public Library Wing A", "distance": "2.1 km", "status": "Backup"}
+            BoothInfo(
+                id=1,
+                name="Gov Primary School",
+                distance="0.4 km",
+                status="Active",
+                address="Block 4, Civic Center",
+            ),
+            BoothInfo(
+                id=2,
+                name="Community Hall",
+                distance="1.2 km",
+                status="Active",
+                address="Market Road",
+            ),
         ]
 
-    def _get_constituency_fallback(self, pincode: str) -> Dict[str, Any]:
+    def _get_live_fallback(self) -> LiveIntelligence:
+        """Provides static fallback for live intelligence."""
+        return LiveIntelligence(
+            upcoming_elections=[
+                ElectionInfo(title="State Elections", date="May 2026", type="Assembly")
+            ],
+            past_results=[
+                ResultSummary(title="General 2024", summary="Stable formation.")
+            ],
+        )
 
-        """Internal helper for pincode data fallback."""
-        return {
-            "name": f"Electoral District {pincode[:3]}",
-            "state": "Verified State",
-            "mp": "Constituency Representative",
-            "mla": "Local Representative",
-            "district": "Administrative Region",
-            "booths": 150,
-            "turnout": "N/A",
-            "status": "Active"
-        }
+    def _get_pincode_fallback(self, pincode: str) -> ConstituencyPulse:
+        """Provides static fallback for pincode lookups."""
+        return ConstituencyPulse(
+            name=f"District {pincode[:3]}",
+            state="Verified",
+            mp="Rep",
+            mla="Local Rep",
+            district="Admin",
+            booths=150,
+            turnout="N/A",
+            status="Active",
+        )

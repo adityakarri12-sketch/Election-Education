@@ -1,12 +1,19 @@
 import os
-from google import genai
+
 from dotenv import load_dotenv
+from google import genai
 
 load_dotenv()
 load_dotenv(dotenv_path="../.env")
 
-API_KEYS_RAW = os.getenv("GEMINI_API_KEYS") or os.getenv("GEMINI_API_KEY") or os.getenv("VITE_GEMINI_API_KEY")
-API_KEYS = [k.strip() for k in API_KEYS_RAW.split(",") if k.strip()] if API_KEYS_RAW else []
+API_KEYS_RAW = (
+    os.getenv("GEMINI_API_KEYS")
+    or os.getenv("GEMINI_API_KEY")
+    or os.getenv("VITE_GEMINI_API_KEY")
+)
+API_KEYS = (
+    [k.strip() for k in API_KEYS_RAW.split(",") if k.strip()] if API_KEYS_RAW else []
+)
 
 print("Searching for a working model...")
 client = genai.Client(api_key=API_KEYS[0])

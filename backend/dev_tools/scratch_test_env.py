@@ -1,5 +1,7 @@
 import os
-from dotenv import load_dotenv, dotenv_values
+
+from dotenv import dotenv_values, load_dotenv
+
 
 def test_dotenv():
     print("Testing backend/.env...")
@@ -12,6 +14,7 @@ def test_dotenv():
     except Exception as e:
         print(f"FAILED on key: {k}")
         print(f"Error: {e}")
+
 
 if __name__ == "__main__":
     test_dotenv()

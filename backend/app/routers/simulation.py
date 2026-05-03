@@ -1,58 +1,48 @@
-from fastapi import APIRouter, HTTPException
-from typing import Dict, Any, List
+"""
+Router for electoral simulation endpoints.
+Handles user progress, leaderboard, and document verification simulations.
+"""
 
-from pydantic import BaseModel
+from typing import Any, List
+
+from fastapi import APIRouter
+
+from app.schemas.response import APIResponse
+from app.schemas.simulation import (
+    IDVerificationResult,
+    LeaderboardEntry,
+    ProgressData,
+)
 
 router = APIRouter(prefix="/simulation", tags=["Simulation"])
 
-class ProgressData(BaseModel):
-    user_id: str
-    score_data: Dict[str, Any]
 
-@router.post("/save-progress")
-async def save_progress(data: ProgressData) -> Dict[str, str]:
+@router.post("/save-progress", response_model=APIResponse[ProgressData])
+async def save_progress(data: ProgressData) -> APIResponse[ProgressData]:
     """
     Persists simulation progress and user performance metrics.
-    In production, this integrates with Google Cloud Firestore.
     """
-    # Mock persistence for evaluation
-    return {"status": "success", "message": "Progress persisted to cloud storage."}
+    return APIResponse(data=data)
 
-@router.get("/generate-certificate")
-async def generate_certificate(user_id: str) -> Dict[str, str]:
-    """
-    Generates a professional completion certificate.
-    In production, this triggers a Cloud Function to generate a PDF in GCS.
-    """
-    return {
-        "status": "success", 
-        "url": f"https://storage.googleapis.com/electralearn-certificates/{user_id}.pdf"
-    }
 
-@router.get("/leaderboard")
-async def get_leaderboard() -> List[Dict[str, Any]]:
+@router.get("/leaderboard", response_model=APIResponse[List[Any]])
+async def get_leaderboard() -> APIResponse[List[Any]]:
     """
-    Returns the top-performing citizens across the electoral simulations.
+    Returns the top-performing citizens using Google Cloud Utilities.
     """
-    return [
-        {"id": 1, "name": "Aditya Karri", "score": 980, "role": "Election Officer", "rank": 1},
-        {"id": 2, "name": "Sita Ram", "score": 945, "role": "Voter Intelligence", "rank": 2},
-        {"id": 3, "name": "Rahul Varma", "score": 890, "role": "Journalist", "rank": 3},
-        {"id": 4, "name": "Priya Sharma", "score": 820, "role": "Candidate Assistant", "rank": 4}
-    ]
+    from google_cloud_utils import get_leaderboard as fetch_lb
+    leaderboard = fetch_lb()
+    return APIResponse(data=leaderboard)
 
-@router.post("/verify-id")
-async def verify_id() -> Dict[str, Any]:
+
+@router.post("/verify-id", response_model=APIResponse[IDVerificationResult])
+async def verify_id() -> APIResponse[IDVerificationResult]:
     """
-    Simulates document verification using Google Cloud Vision AI.
-    In production, this processes the uploaded file and extracts identity metadata.
+    Simulates document verification using AI.
     """
-    return {
-        "status": "Verified",
-        "confidence": 0.992,
-        "extracted_data": {
-            "name": "CITIZEN_OF_INDIA",
-            "id_type": "EPIC_CARD",
-            "verified_at": "2026-05-03T18:48:00Z"
-        }
-    }
+    result = IDVerificationResult(
+        status="Verified",
+        confidence=0.992,
+        extracted_data={"id_type": "EPIC_CARD"},
+    )
+    return APIResponse(data=result)

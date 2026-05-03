@@ -1,15 +1,25 @@
+"""
+Repository for direct AI cluster interactions.
+Encapsulates GenAI API calls and JSON parsing.
+"""
+
 import json
-import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict
+
 from google.genai import types
+
 from app.services.ai_cluster import GenAICluster
+
 
 class AIRepository:
     """
-    Repository: High-Fidelity AI Data Retrieval.
-    Encapsulates all direct interactions with the GenAI Cluster.
+    Repository for High-Fidelity AI Data Retrieval.
+
+    Handles communication with the generative AI cluster and
+    standardizes the extraction of structured and unstructured data.
     """
-    def __init__(self, ai_cluster: GenAICluster):
+
+    def __init__(self, ai_cluster: GenAICluster) -> None:
         """
         Initializes the AI repository with a cluster instance.
 
@@ -18,7 +28,9 @@ class AIRepository:
         """
         self.ai_cluster = ai_cluster
 
-    async def fetch_json_data(self, prompt: str, temperature: float = 0.1) -> Dict[str, Any]:
+    async def fetch_json_data(
+        self, prompt: str, temperature: float = 0.1
+    ) -> Dict[str, Any]:
         """
         Fetches and parses JSON data from the AI cluster.
 
@@ -28,18 +40,15 @@ class AIRepository:
 
         Returns:
             Dict[str, Any]: Parsed JSON response.
-
-        Raises:
-            json.JSONDecodeError: If AI output is not valid JSON.
         """
         res = await self.ai_cluster.generate(
             contents=prompt,
             config=types.GenerateContentConfig(
-                temperature=temperature,
-                response_mime_type="application/json"
-            )
+                temperature=temperature, response_mime_type="application/json"
+            ),
         )
-        return json.loads(res)
+        data: Dict[str, Any] = json.loads(res)
+        return data
 
     async def fetch_text_data(self, prompt: str, temperature: float = 0.1) -> str:
         """
@@ -52,7 +61,8 @@ class AIRepository:
         Returns:
             str: Raw text response.
         """
-        return await self.ai_cluster.generate(
+        response: str = await self.ai_cluster.generate(
             contents=prompt,
-            config=types.GenerateContentConfig(temperature=temperature)
+            config=types.GenerateContentConfig(temperature=temperature),
         )
+        return response

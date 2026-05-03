@@ -1,23 +1,26 @@
-import os
 import logging
-from typing import List, Optional, Dict
+import os
 from datetime import datetime
+from typing import Dict, List, Optional
+
 from google import genai
 from google.genai import types
 
 # Professional Logging Configuration
 logger = logging.getLogger("ElectraLearn.AIEngine")
 
+
 class GenAICluster:
     def __init__(self, keys: List[str]):
         self.keys: List[str] = keys
         self.current_index: int = 0
         self.clients = [genai.Client(api_key=k) for k in self.keys]
-        
+
     def get_client(self) -> Optional[genai.Client]:
-        if not self.clients: return None
+        if not self.clients:
+            return None
         return self.clients[self.current_index]
-    
+
     def rotate(self) -> bool:
         if len(self.clients) > 1:
             self.current_index = (self.current_index + 1) % len(self.clients)
@@ -38,9 +41,7 @@ class GenAICluster:
             try:
                 # Use the asynchronous client
                 response = await client.aio.models.generate_content(
-                    model=model,
-                    contents=contents,
-                    config=config
+                    model=model, contents=contents, config=config
                 )
                 if response and response.text:
                     return response.text
@@ -49,24 +50,30 @@ class GenAICluster:
             except Exception as e:
                 last_error = e
                 error_str = str(e).lower()
-                
+
                 # Check for rate limits or quota issues
                 if "429" in error_str or "quota" in error_str or "limit" in error_str:
-                    logger.warning(f"Engine Index {self.current_index} Quota Exceeded. Rotating and retrying...")
+                    logger.warning(
+                        f"Engine Index {self.current_index} Quota Exceeded. Rotating and retrying..."
+                    )
                     self.rotate()
                     continue
-                
+
                 # If it's a model error or other transient issue, rotate and try again anyway
-                logger.error(f"Engine Index {self.current_index} encountered error: {e}. Failover triggered.")
+                logger.error(
+                    f"Engine Index {self.current_index} encountered error: {e}. Failover triggered."
+                )
                 self.rotate()
-                
+
         raise last_error or Exception("GenAI Cluster Exhausted.")
+
 
 class IntelligenceCache:
     """
     High-performance in-memory cache system with Time-To-Live (TTL) support.
     Reduces API costs and prevents quota exhaustion by serving verified snapshots.
     """
+
     def __init__(self, ttl_seconds: int = 600):
         self._store: Dict[str, Dict] = {}
         self.ttl: int = ttl_seconds
@@ -85,7 +92,7 @@ class IntelligenceCache:
         """Stores data with a calculated expiry timestamp."""
         self._store[key] = {
             "data": data,
-            "expiry": datetime.now().timestamp() + self.ttl
+            "expiry": datetime.now().timestamp() + self.ttl,
         }
         logger.debug(f"Cache: Entry '{key}' stored.")
 

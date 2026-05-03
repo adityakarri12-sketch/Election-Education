@@ -1,49 +1,47 @@
-import logging
-import sys
-import uuid
-from typing import Any, Dict
-from logging.handlers import RotatingFileHandler
-from pythonjsonlogger import jsonlogger
+"""
+Structured JSON logging configuration for ElectraLearn.
+Ensures consistency and machine-readability of logs.
+"""
 
-class ContextFilter(logging.Filter):
+import json
+import logging
+from typing import Any, Dict
+
+
+class JSONFormatter(logging.Formatter):
     """
-    Filter to inject contextual request_id into logs.
+    Custom JSON formatter for logging.
     """
-    def filter(self, record: logging.LogRecord) -> bool:
-        if not hasattr(record, 'request_id'):
-            record.request_id = str(uuid.uuid4())
-        return True
+
+    def format(self, record: logging.LogRecord) -> str:
+        """
+        Formats the log record as a JSON string.
+        """
+        log_record: Dict[str, Any] = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "module": record.module,
+            "message": record.getMessage(),
+            "request_id": getattr(record, "request_id", "N/A"),
+        }
+        if record.exc_info:
+            log_record["exception"] = self.formatException(record.exc_info)
+        return json.dumps(log_record)
+
 
 def setup_logging() -> None:
     """
-    Configures an enterprise-grade JSON structured logging system.
-    Strictly follows machine-readable signals for automated auditing.
+    Initializes the logging system with JSON formatting.
     """
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
 
-    # Clear existing handlers
-    if root_logger.hasHandlers():
-        root_logger.handlers.clear()
+    # Avoid duplicate handlers
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(JSONFormatter())
+        logger.addHandler(handler)
 
-    ctx_filter = ContextFilter()
-
-    # JSON Formatting specification
-    log_format = '%(asctime)s %(name)s %(levelname)s %(request_id)s %(message)s %(module)s'
-
-    # Stream Handler (Stdout)
-    console_handler = logging.StreamHandler(sys.stdout)
-    json_formatter = jsonlogger.JsonFormatter(log_format)
-    console_handler.setFormatter(json_formatter)
-    console_handler.addFilter(ctx_filter)
-    root_logger.addHandler(console_handler)
-
-    # File Handler (Rotating)
-    file_handler = RotatingFileHandler(
-        'app.log', maxBytes=10485760, backupCount=5
-    )
-    file_handler.setFormatter(json_formatter)
-    file_handler.addFilter(ctx_filter)
-    root_logger.addHandler(file_handler)
-
-    logging.info("Platform Intelligence Logging System Initialized with JSON Structure.")
+    # Standard library loggers adjustment
+    logging.getLogger("uvicorn.access").handlers = logger.handlers
+    logging.getLogger("uvicorn.error").handlers = logger.handlers

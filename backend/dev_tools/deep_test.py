@@ -1,14 +1,26 @@
 import os
-from google import genai
+
 from dotenv import load_dotenv
+from google import genai
 
 load_dotenv()
 load_dotenv(dotenv_path="../.env")
 
-API_KEYS_RAW = os.getenv("GEMINI_API_KEYS") or os.getenv("GEMINI_API_KEY") or os.getenv("VITE_GEMINI_API_KEY")
-API_KEYS = [k.strip() for k in API_KEYS_RAW.split(",") if k.strip()] if API_KEYS_RAW else []
+API_KEYS_RAW = (
+    os.getenv("GEMINI_API_KEYS")
+    or os.getenv("GEMINI_API_KEY")
+    or os.getenv("VITE_GEMINI_API_KEY")
+)
+API_KEYS = (
+    [k.strip() for k in API_KEYS_RAW.split(",") if k.strip()] if API_KEYS_RAW else []
+)
 
-test_models = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-2.0-flash-exp", "gemini-2.0-flash"]
+test_models = [
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-2.0-flash-exp",
+    "gemini-2.0-flash",
+]
 
 for k_idx, k in enumerate(API_KEYS):
     print(f"\n--- KEY {k_idx} ---")

@@ -44,7 +44,8 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       handleGoogleCredentialResponse(response.detail);
     };
 
-    const win = window as unknown as Record<string, unknown>;
+    const win = window as any;
+
 
     if (typeof window !== 'undefined' && win.google) {
       if (!win.__GSI_INITIALIZED__) {

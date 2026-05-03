@@ -48,6 +48,15 @@ interface ConstituencyData {
   status: string;
 }
 
+interface Booth {
+  id: number;
+  name: string;
+  distance: string;
+  status: string;
+  address: string;
+}
+
+
 // --- COMPONENTS ---
 
 const MYTHS = [
@@ -149,7 +158,8 @@ const ConstituencyPulse: React.FC = () => {
   const { showError } = useAuth();
   const [pincode, setPincode] = useState<string>('');
   const [data, setData] = useState<ConstituencyData | null>(null);
-  const [booths, setBooths] = useState<unknown[]>([]);
+  const [booths, setBooths] = useState<Booth[]>([]);
+
 
   const [loading, setLoading] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);

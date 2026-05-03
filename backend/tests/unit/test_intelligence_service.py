@@ -1,77 +1,119 @@
+"""
+Unit tests for IntelligenceService.
+Verifies logic paths and fallback behavior when AI fails.
+"""
+
 import pytest
-import json
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock, AsyncMock
 from app.services.intelligence_service import IntelligenceService
+from app.schemas.intelligence import LiveIntelligence, ConstituencyPulse
+
 
 @pytest.mark.asyncio
-async def test_get_live_intelligence_success():
-    # Setup
-    mock_ai = AsyncMock()
-    mock_ai.generate.return_value = json.dumps({
-        "upcoming_elections": [{"title": "Test Election", "date": "May 2026", "type": "Assembly"}],
-        "upcoming_results": [],
+async def test_live_intelligence_success() -> None:
+    """Tests successful live intelligence retrieval with caching."""
+    repo = AsyncMock()
+    repo.fetch_json_data.return_value = {
+        "upcoming_elections": [], 
+        "upcoming_results": [], 
         "past_results": []
-    })
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = None
+    }
+    cache = MagicMock()
+    cache.get.return_value = None
     
-    service = IntelligenceService(mock_ai, mock_cache)
-    
-    # Execute
+    service = IntelligenceService(repo, cache)
     result = await service.get_live_intelligence()
     
-    # Assert
-    assert result["upcoming_elections"][0]["title"] == "Test Election"
-    mock_ai.generate.assert_called_once()
-    mock_cache.set.assert_called_once()
+    assert isinstance(result, LiveIntelligence)
+    cache.set.assert_called_once()
+
 
 @pytest.mark.asyncio
-async def test_get_constituency_pulse_failure_fallback():
-    mock_ai = AsyncMock()
-    mock_ai.generate.side_effect = Exception("API Error")
-    mock_cache = MagicMock()
-    service = IntelligenceService(mock_ai, mock_cache)
-    result = await service.get_constituency_pulse("123456")
-    assert "Electoral District" in result["name"]
-
-@pytest.mark.asyncio
-async def test_get_live_intelligence_failure_fallback():
-    mock_ai = AsyncMock()
-    mock_ai.generate.side_effect = Exception("API Error")
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = None
+async def test_live_intelligence_from_cache() -> None:
+    """Tests that the service returns data from cache if available."""
+    repo = AsyncMock()
+    cache = MagicMock()
+    cache.get.return_value = {
+        "upcoming_elections": [], 
+        "upcoming_results": [], 
+        "past_results": []
+    }
     
-    service = IntelligenceService(mock_ai, mock_cache)
+    service = IntelligenceService(repo, cache)
     result = await service.get_live_intelligence()
     
-    assert "West Bengal Assembly" in str(result)
+    assert isinstance(result, LiveIntelligence)
+    repo.fetch_json_data.assert_not_called()
+
 
 @pytest.mark.asyncio
-async def test_get_live_intelligence_cache_hit():
-
-    mock_ai = AsyncMock()
-    mock_cache = MagicMock()
-    mock_cache.get.return_value = {"cached": "data"}
-    service = IntelligenceService(mock_ai, mock_cache)
+async def test_live_intelligence_fallback() -> None:
+    """
+    Tests that the service returns a fallback when the AI repository fails.
+    """
+    repo = AsyncMock()
+    repo.fetch_json_data.side_effect = Exception("AI Offline")
+    cache = MagicMock()
+    cache.get.return_value = None
+    
+    service = IntelligenceService(repo, cache)
     result = await service.get_live_intelligence()
-    assert result == {"cached": "data"}
+    
+    assert result.upcoming_elections[0].title == "State Elections"
+
 
 @pytest.mark.asyncio
-async def test_translate_content_failure():
-    mock_ai = AsyncMock()
-    mock_ai.generate.side_effect = Exception("Translation Error")
-    mock_cache = MagicMock()
-    service = IntelligenceService(mock_ai, mock_cache)
-    result = await service.translate_content("Hello", "fr")
-    assert "[Service Temporarily Unavailable]" in result
+async def test_pincode_success() -> None:
+    """Tests successful pincode lookup."""
+    repo = AsyncMock()
+    repo.fetch_json_data.return_value = {
+        "name": "Test", "state": "Test", "mp": "Test", "mla": "Test",
+        "district": "Test", "booths": 10, "turnout": "50%", "status": "Active"
+    }
+    cache = MagicMock()
+    
+    service = IntelligenceService(repo, cache)
+    result = await service.get_constituency_pulse("111111")
+    assert result.name == "Test"
+
 
 @pytest.mark.asyncio
-async def test_chat_with_assistant_failure():
-    mock_ai = AsyncMock()
-    mock_ai.generate.side_effect = Exception("Chat Error")
-    mock_cache = MagicMock()
-    service = IntelligenceService(mock_ai, mock_cache)
-    result = await service.chat_with_assistant("Hi")
+async def test_pincode_fallback() -> None:
+    """
+    Tests that the service returns a fallback for constituency pulse when AI fails.
+    """
+    repo = AsyncMock()
+    repo.fetch_json_data.side_effect = Exception("AI Offline")
+    cache = MagicMock()
+    
+    service = IntelligenceService(repo, cache)
+    result = await service.get_constituency_pulse("500001")
+    
+    assert "District 500" in result.name
+
+
+@pytest.mark.asyncio
+async def test_chat_success() -> None:
+    """Tests successful chat interaction."""
+    repo = AsyncMock()
+    repo.fetch_text_data.return_value = "Hello back"
+    cache = MagicMock()
+    
+    service = IntelligenceService(repo, cache)
+    result = await service.chat_with_assistant("Hello")
+    assert result == "Hello back"
+
+
+@pytest.mark.asyncio
+async def test_chat_failure_message() -> None:
+    """
+    Tests the error message when the chat assistant fails.
+    """
+    repo = AsyncMock()
+    repo.fetch_text_data.side_effect = Exception("AI Offline")
+    cache = MagicMock()
+    
+    service = IntelligenceService(repo, cache)
+    result = await service.chat_with_assistant("Hello")
+    
     assert "recalibrating" in result
-
-

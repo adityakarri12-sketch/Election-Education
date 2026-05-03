@@ -1,27 +1,34 @@
+"""
+Router for system-level diagnostic endpoints.
+Provides health checks and evaluation metrics.
+"""
+
+from typing import Any, Dict
+
 from fastapi import APIRouter, Depends
-from typing import Dict, Any
+
+from app.api.dependencies import get_system_service
+from app.schemas.response import APIResponse
 from app.services.system_service import SystemService
 
 router = APIRouter(prefix="/system", tags=["System"])
 
-def get_system_service() -> SystemService:
-    """Dependency provider for the SystemService."""
-    return SystemService()
 
-@router.get("/health")
+@router.get("/health", response_model=APIResponse[Dict[str, str]])
 async def health_check(
-    service: SystemService = Depends(get_system_service)
-) -> Dict[str, str]:
+    service: SystemService = Depends(get_system_service),
+) -> APIResponse[Dict[str, str]]:
     """
     Returns the operational status of the platform core.
     """
-    return service.get_health_status()
+    return APIResponse(data=service.get_health_status())
 
-@router.get("/evaluate")
+
+@router.get("/evaluate", response_model=APIResponse[Dict[str, Any]])
 async def get_evaluation_metrics(
-    service: SystemService = Depends(get_system_service)
-) -> Dict[str, Any]:
+    service: SystemService = Depends(get_system_service),
+) -> APIResponse[Dict[str, Any]]:
     """
-    Provides real-time proof signals for the automated evaluation system.
+    Provides real-time proof signals for the evaluation system.
     """
-    return service.get_evaluation_metrics()
+    return APIResponse(data=service.get_evaluation_metrics())

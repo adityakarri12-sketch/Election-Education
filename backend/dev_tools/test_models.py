@@ -1,11 +1,13 @@
 import os
-from google import genai
+
 from dotenv import load_dotenv
+from google import genai
 
 load_dotenv()
 load_dotenv(dotenv_path="../.env")
 
-API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("VITE_GEMINI_API_KEY")
+raw_keys = os.getenv("GEMINI_API_KEY") or os.getenv("VITE_GEMINI_API_KEY") or ""
+API_KEY = [k.strip() for k in raw_keys.split(",") if k.strip()][0] if raw_keys else ""
 client = genai.Client(api_key=API_KEY)
 
 try:

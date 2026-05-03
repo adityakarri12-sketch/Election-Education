@@ -85,9 +85,10 @@ export const TestingEvaluation = () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
       const res = await fetch(`${baseUrl}/api/v1/system/evaluate`);
-
       const data = await res.json();
-      setReport(data);
+      if (data && data.data) {
+        setReport(data.data);
+      }
     } catch (e) {
       console.error("Evaluation Retrieval Error", e);
     } finally {
@@ -118,7 +119,6 @@ export const TestingEvaluation = () => {
     </div>
   );
 
-  if (!report) return LoadingUI;
 
   return (
 

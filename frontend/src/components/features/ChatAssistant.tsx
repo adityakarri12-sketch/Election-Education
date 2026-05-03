@@ -38,7 +38,8 @@ export const ChatAssistant = () => {
   const [isMounted, setIsMounted] = useState(false);
   
   const scrollRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
+
 
 
   useEffect(() => {
@@ -75,13 +76,15 @@ export const ChatAssistant = () => {
   useEffect(() => {
     const win = window as unknown as { webkitSpeechRecognition: unknown; SpeechRecognition: unknown };
 
-    const SpeechRecognition = win.webkitSpeechRecognition || win.SpeechRecognition;
+    const SpeechRecognition = (win.webkitSpeechRecognition || win.SpeechRecognition) as any;
+
 
     if (typeof window !== 'undefined' && SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current = new (SpeechRecognition as any)();
       if (recognitionRef.current) {
         recognitionRef.current.continuous = false;
-        recognitionRef.current.onresult = (e: SpeechRecognitionEvent) => {
+        recognitionRef.current.onresult = (e: any) => {
+
           setInput(e.results[0][0].transcript);
           setIsListening(false);
         };
@@ -151,7 +154,8 @@ export const ChatAssistant = () => {
       
       handleSpeak(data.response, finalMessages.length - 1);
 
-    } catch (error: unknown) {
+    } catch (error: any) {
+
 
       let errorMsg = "Connectivity issue. Please ensure your backend is operational.";
       if (error.message === "QUOTA_EXCEEDED") {
