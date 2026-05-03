@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, ArrowRight, ShieldCheck, Globe, Sparkles } from 'lucide-react';
+import { X, Mail, Lock, User, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { cn } from '@/lib/utils';
+
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -18,30 +18,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const { login } = useAuth();
   const [showGooglePicker, setShowGooglePicker] = useState(false);
 
-  useEffect(() => {
-    const handleResponse = (response: any) => {
-      handleGoogleCredentialResponse(response);
-    };
-
-    if (typeof window !== 'undefined' && (window as any).google) {
-      if (!(window as any).__GSI_INITIALIZED__) {
-        (window as any).google.accounts.id.initialize({
-          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "YOUR_CLIENT_ID.apps.googleusercontent.com",
-          callback: (resp: any) => {
-            window.dispatchEvent(new CustomEvent('gsi-success', { detail: resp }));
-          },
-          auto_select: false,
-        });
-        (window as any).__GSI_INITIALIZED__ = true;
-      }
-    }
-
-    const listener = (e: any) => handleResponse(e.detail);
-    window.addEventListener('gsi-success', listener);
-    return () => window.removeEventListener('gsi-success', listener);
-  }, []);
-
-  const handleGoogleCredentialResponse = (response: any) => {
+    const handleGoogleCredentialResponse = useCallback((response: { credential: string }) => {
     // In a real app, you would verify this JWT on the backend
     // For this simulation, we'll decode the JWT (Base64) to get user info
     try {
@@ -60,11 +37,42 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       login("user@google.com", "Google Citizen");
       onClose();
     }
-  };
+  }, [login, onClose]);
+
+  useEffect(() => {
+    const handleResponse = (response: { detail: { credential: string } }) => {
+      handleGoogleCredentialResponse(response.detail);
+    };
+
+    const win = window as unknown as Record<string, unknown>;
+
+    if (typeof window !== 'undefined' && win.google) {
+      if (!win.__GSI_INITIALIZED__) {
+        win.google.accounts.id.initialize({
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "YOUR_CLIENT_ID.apps.googleusercontent.com",
+          callback: (resp: unknown) => {
+
+            window.dispatchEvent(new CustomEvent('gsi-success', { detail: resp }));
+          },
+          auto_select: false,
+        });
+        win.__GSI_INITIALIZED__ = true;
+      }
+    }
+
+    const listener = (e: Event) => handleResponse(e as unknown as { detail: { credential: string } });
+
+    window.addEventListener('gsi-success', listener);
+    return () => window.removeEventListener('gsi-success', listener);
+  }, [handleGoogleCredentialResponse]);
+
+
 
   const renderGoogleButton = () => {
-    if (typeof window !== 'undefined' && (window as any).google) {
-      (window as any).google.accounts.id.renderButton(
+    const win = window as unknown as { google: { accounts: { id: { renderButton: (el: HTMLElement | null, options: object) => void } } } };
+    if (typeof window !== 'undefined' && win.google) {
+      win.google.accounts.id.renderButton(
+
         document.getElementById("googleSignInDiv"),
         { theme: "outline", size: "large", width: "100%" }
       );

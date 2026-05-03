@@ -14,7 +14,8 @@ interface HoverInfoCardProps {
   color?: string;
 }
 
-export const HoverInfoCard = ({ title, description, details, icon: Icon, className, color = "primary" }: HoverInfoCardProps) => {
+export const HoverInfoCard = ({ title, description, details, icon: Icon, className }: HoverInfoCardProps) => {
+
   const [isHovered, setIsHovered] = useState(false);
 
   return (

@@ -3,11 +3,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  MessageSquare, Send, Bot, User, 
-  Loader2, Sparkles, Mic, MicOff, Volume2, 
+  Send, Bot, User, 
+  Mic, MicOff, Volume2, 
   VolumeX, History, Trash2, Zap, Plus,
-  X, Menu, Clock
+  X, Clock
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 
@@ -37,7 +38,8 @@ export const ChatAssistant = () => {
   const [isMounted, setIsMounted] = useState(false);
   
   const scrollRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
 
   useEffect(() => {
     setIsMounted(true);
@@ -71,17 +73,23 @@ export const ChatAssistant = () => {
   }, [activeChat?.messages, isLoading]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const win = window as unknown as { webkitSpeechRecognition: unknown; SpeechRecognition: unknown };
+
+    const SpeechRecognition = win.webkitSpeechRecognition || win.SpeechRecognition;
+
+    if (typeof window !== 'undefined' && SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.onresult = (e: any) => {
-        setInput(e.results[0][0].transcript);
-        setIsListening(false);
-      };
-      recognitionRef.current.onend = () => setIsListening(false);
+      if (recognitionRef.current) {
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.onresult = (e: SpeechRecognitionEvent) => {
+          setInput(e.results[0][0].transcript);
+          setIsListening(false);
+        };
+        recognitionRef.current.onend = () => setIsListening(false);
+      }
     }
   }, []);
+
 
   const handleSpeak = (text: string, index: number) => {
     if (speakingIndex === index) {
@@ -114,7 +122,8 @@ export const ChatAssistant = () => {
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-      const response = await fetch(`${baseUrl}/api/chatbot`, {
+      const response = await fetch(`${baseUrl}/api/v1/intelligence/chatbot`, {
+
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json'
@@ -142,7 +151,8 @@ export const ChatAssistant = () => {
       
       handleSpeak(data.response, finalMessages.length - 1);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+
       let errorMsg = "Connectivity issue. Please ensure your backend is operational.";
       if (error.message === "QUOTA_EXCEEDED") {
         errorMsg = "Autonomous AI failover in progress. The cluster is currently recalibrating due to high demand. Please retry in a few seconds.";

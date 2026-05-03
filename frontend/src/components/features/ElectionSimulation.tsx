@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Megaphone, ShieldCheck, CheckCircle2, 
-  XCircle, Info, Trophy, RotateCcw, 
-  ArrowRight, Download, Play, ListOrdered,
-  Landmark, AlertTriangle, Newspaper, Sparkles
+  Trophy, RotateCcw, 
+  Download, Play,
+  AlertTriangle, Newspaper, Sparkles
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { voterQuestions, candidateQuestions, officerQuestions, Question } from '@/data/simulationQuestions';
 
@@ -80,7 +82,8 @@ export const ElectionSimulation = () => {
         // Boost: Persist simulation results to Firestore
         try {
           const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-          await fetch(`${baseUrl}/api/save-progress`, {
+          await fetch(`${baseUrl}/api/v1/simulation/save-progress`, {
+
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -97,7 +100,8 @@ export const ElectionSimulation = () => {
     // Advanced Boost: Generate professional certificate via Google Cloud Storage
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-      const res = await fetch(`${baseUrl}/api/generate-certificate?user_id=${selectedRole}_${score}`);
+      const res = await fetch(`${baseUrl}/api/v1/simulation/generate-certificate?user_id=${selectedRole}_${score}`);
+
       const data = await res.json();
       if (data.url) {
         window.open(data.url, '_blank');

@@ -49,7 +49,8 @@ export const FlipCard = ({ title, description, details, icon: Icon }: FlipCardPr
     try {
       const translated = await Promise.all(details.map(async (text) => {
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-        const res = await fetch(`${baseUrl}/api/v1/translate`, {
+        const res = await fetch(`${baseUrl}/api/v1/intelligence/translate`, {
+
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text, target_language: 'hi' })
@@ -58,8 +59,10 @@ export const FlipCard = ({ title, description, details, icon: Icon }: FlipCardPr
         return data.translated_text;
       }));
       setTranslatedDetails(translated);
-    } catch (e) {
+    } catch {
       showError("Localization engine recalibrating. Fallback AI remains active.");
+
+
     } finally {
       setIsTranslating(false);
     }

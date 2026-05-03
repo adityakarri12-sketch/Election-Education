@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ShieldCheck, Zap, Activity, CheckCircle2, 
-  AlertCircle, BarChart3, RefreshCcw, Search,
+  AlertCircle, BarChart3, RefreshCcw,
   Gauge, HardDrive, Cpu
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 
 interface EvaluationReport {
@@ -50,7 +51,7 @@ interface EvaluationReport {
 
 export const TestingEvaluation = () => {
   const [report, setReport] = useState<EvaluationReport | null>(null);
-  const [loading, setLoading] = useState(true);
+
 
   const [isRunningAudit, setIsRunningAudit] = useState(false);
   const [auditProgress, setAuditProgress] = useState(0);
@@ -80,18 +81,19 @@ export const TestingEvaluation = () => {
   };
 
   const fetchEvaluation = async () => {
-    setLoading(true);
+
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-      const res = await fetch(`${baseUrl}/api/v1/test/evaluate`);
+      const res = await fetch(`${baseUrl}/api/v1/system/evaluate`);
+
       const data = await res.json();
       setReport(data);
     } catch (e) {
       console.error("Evaluation Retrieval Error", e);
     } finally {
-      setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchEvaluation();
@@ -116,7 +118,10 @@ export const TestingEvaluation = () => {
     </div>
   );
 
+  if (!report) return LoadingUI;
+
   return (
+
     <div className="space-y-12">
       {/* SCORE OVERVIEW */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -201,7 +206,8 @@ export const TestingEvaluation = () => {
                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Breadth Analysis</span>
             </div>
             <div className="space-y-4">
-               {report.workflow_analysis.map((wf, i) => (
+               {report?.workflow_analysis?.map((wf: any, i: number) => (
+
                   <div key={i} className="flex items-center justify-between p-5 bg-white/5 border border-white/5 rounded-2xl">
                      <div className="flex items-center gap-4">
                         <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-400">
@@ -230,11 +236,12 @@ export const TestingEvaluation = () => {
             </div>
             <div className="grid grid-cols-1 gap-4">
                {[
-                  { label: 'JSON Schema Compliance', value: report.automated_validations.json_schema_checks, icon: CheckCircle2, color: 'text-emerald-500' },
-                  { label: 'Cross-Key Consistency', value: report.automated_validations.cross_key_consistency, icon: CheckCircle2, color: 'text-emerald-500' },
-                  { label: 'Failover Response Latency', value: `${report.automated_validations.failover_latency_ms}ms`, icon: Zap, color: 'text-primary' },
-                  { label: 'Quota Exhaustion Recovery', value: report.automated_validations.quota_exhaustion_recovery, icon: RefreshCcw, color: 'text-purple-500' }
-               ].map((item, i) => (
+                  { label: 'JSON Schema Compliance', value: report?.automated_validations?.json_schema_checks, icon: CheckCircle2, color: 'text-emerald-500' },
+                  { label: 'Cross-Key Consistency', value: report?.automated_validations?.cross_key_consistency, icon: CheckCircle2, color: 'text-emerald-500' },
+                  { label: 'Failover Response Latency', value: `${report?.automated_validations?.failover_latency_ms || 0}ms`, icon: Zap, color: 'text-primary' },
+                  { label: 'Quota Exhaustion Recovery', value: report?.automated_validations?.quota_exhaustion_recovery, icon: RefreshCcw, color: 'text-purple-500' }
+               ].map((item: any, i: number) => (
+
                   <div key={i} className="flex items-center justify-between p-5 bg-white/5 border border-white/5 rounded-2xl">
                      <div className="flex items-center gap-4">
                         <item.icon size={18} className={item.color} />
@@ -252,10 +259,11 @@ export const TestingEvaluation = () => {
         {[
           { label: 'Security Protocols', value: '100% (CSP Active)', icon: ShieldCheck, color: 'text-emerald-500' },
           { label: 'ARIA Compliance', value: '100% (Complete)', icon: Zap, color: 'text-amber-500' },
-          { label: 'Core Logic', value: report.system_integrity.core_logic, icon: Cpu, color: 'text-slate-400' },
-          { label: 'Failover', value: report.system_integrity.failover_mechanism, icon: RefreshCcw, color: 'text-slate-400' },
-          { label: 'Data Accuracy', value: report.system_integrity.data_accuracy, icon: Gauge, color: 'text-slate-400' },
-          { label: 'Sync Status', value: report.system_integrity.hydration_sync, icon: HardDrive, color: 'text-slate-400' }
+          { label: 'Core Logic', value: report?.system_integrity?.core_logic, icon: Cpu, color: 'text-slate-400' },
+          { label: 'Failover', value: report?.system_integrity?.failover_mechanism, icon: RefreshCcw, color: 'text-slate-400' },
+          { label: 'Data Accuracy', value: report?.system_integrity?.data_accuracy, icon: Gauge, color: 'text-slate-400' },
+          { label: 'Sync Status', value: report?.system_integrity?.hydration_sync, icon: HardDrive, color: 'text-slate-400' }
+
         ].map((item, i) => (
           <div key={i} className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] flex items-center gap-6">
             <div className={cn("w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center", item.color)}>
@@ -281,7 +289,8 @@ export const TestingEvaluation = () => {
         </div>
 
         <div className="space-y-4">
-          {report.recent_test_suite.map((test, i) => (
+          {report?.recent_test_suite?.map((test: any, i: number) => (
+
             <div key={i} className="flex items-center justify-between p-6 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all">
               <div className="flex items-center gap-6">
                 <div className={cn(

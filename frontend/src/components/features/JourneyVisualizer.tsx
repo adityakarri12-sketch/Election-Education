@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, Search, ClipboardCheck, Vote, BarChart3, ShieldCheck, Info, Sparkles } from 'lucide-react';
+import { UserPlus, Search, Vote, BarChart3, ShieldCheck, Info, Sparkles } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 
 const stages = [

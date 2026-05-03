@@ -2,14 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Vote, Home, BookOpen, Gamepad2, 
   LayoutDashboard, User, MessageSquare, 
   ChevronDown, LogOut, Settings, Award, 
-  Shield, Bell, Zap, Globe, CheckCircle2, Search
+  Shield, Bell, Zap, Globe
 } from 'lucide-react';
+
+
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -29,16 +33,17 @@ export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+
   
   // Profile Overlay State
   const [isProfileOverlayOpen, setIsProfileOverlayOpen] = useState(false);
   const [activeProfileTab, setActiveProfileTab] = useState<'settings' | 'achievements' | 'notifications'>('settings');
 
-  const { user, logout, isLoading, showError } = useAuth();
+  const { user, logout, isLoading } = useAuth();
+
 
   useEffect(() => {
-    setIsMounted(true);
+
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -123,9 +128,10 @@ export const Navbar = () => {
                     aria-haspopup="true"
                     className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-1.5 pr-4 hover:bg-white/10 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-xl overflow-hidden border border-white/20">
-                       <img src={user.avatar} alt={`${user.name}'s Profile Avatar`} className="w-full h-full object-cover" />
+                    <div className="w-8 h-8 rounded-xl overflow-hidden border border-white/20 relative">
+                       <Image src={user.avatar} alt={`${user.name}'s Profile Avatar`} fill className="object-cover" />
                     </div>
+
                     <div className="hidden sm:block text-left">
                        <p className="text-xs font-bold text-white leading-none mb-1">{user.name}</p>
                        <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest">{user.role}</p>
@@ -166,7 +172,8 @@ export const Navbar = () => {
                               key={i}
                               role="menuitem"
                               aria-label={item.label}
-                              onClick={() => openProfileWithTab(item.tab as any)}
+                              onClick={() => openProfileWithTab(item.tab as 'settings' | 'achievements' | 'notifications')}
+
                               className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold"
                             >
                               <item.icon size={18} aria-hidden="true" /> {item.label}

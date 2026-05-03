@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+import scrollbar from 'tailwind-scrollbar';
+
 
 const config: Config = {
   content: [
@@ -16,7 +18,8 @@ const config: Config = {
     },
   },
   plugins: [
-    require('tailwind-scrollbar'),
+    scrollbar,
   ],
 };
+
 export default config;

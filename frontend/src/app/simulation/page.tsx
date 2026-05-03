@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ElectionSimulation } from '@/components/features/ElectionSimulation';
-import { Gamepad2, ShieldCheck, Zap, Target, Award, Info } from 'lucide-react';
+import { ShieldCheck, Zap, Target, Award, Info } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 
 export default function SimulationPage() {

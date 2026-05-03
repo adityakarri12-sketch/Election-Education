@@ -8,13 +8,15 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
+
 
 export const DocumentVerification = () => {
   const { showError } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'uploading' | 'analyzing' | 'success' | 'fail'>('idle');
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -37,7 +39,8 @@ export const DocumentVerification = () => {
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-      const res = await fetch(`${baseUrl}/api/v1/verify-id`, {
+      const res = await fetch(`${baseUrl}/api/v1/simulation/verify-id`, {
+
         method: 'POST',
         body: formData,
       });
@@ -53,7 +56,9 @@ export const DocumentVerification = () => {
         setStatus(data.status === 'Verified' ? 'success' : 'fail');
       }, 2000);
 
-    } catch (e) {
+    } catch {
+
+
       showError("ID Verification engine is currently recalibrating. Please ensure Cloud Vision API is active.");
       setStatus('idle');
     }
@@ -83,7 +88,8 @@ export const DocumentVerification = () => {
           )}>
             {preview ? (
               <>
-                <img src={preview} alt="ID Preview" className="w-full h-full object-cover opacity-40" />
+                <Image src={preview} alt="ID Preview" fill className="object-cover opacity-40" />
+
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                    <FileText size={48} className={cn("mb-4", status === 'success' ? "text-emerald-500" : "text-primary")} />
                    <p className="text-white font-bold text-sm truncate max-w-full px-4">{file?.name}</p>

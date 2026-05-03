@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, ShieldAlert, CheckCircle2, XCircle, 
-  MapPin, Users, Calendar, Clock,
-  ArrowRight, Info, Zap, Globe, Sparkles,
+  ShieldAlert, CheckCircle2, XCircle, 
+  MapPin, Users, Calendar,
+  Zap, Globe,
   Loader2
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { DocumentVerification } from '@/components/features/DocumentVerification';
@@ -99,8 +100,9 @@ const MythBuster: React.FC = () => {
               <ShieldAlert size={14} /> Myth vs Reality
             </div>
             <h3 id="mythbuster-title" className="text-3xl font-black text-white leading-tight max-w-md">
-              "{MYTHS[index].myth}"
+              &ldquo;{MYTHS[index].myth}&rdquo;
             </h3>
+
             <div className="flex gap-4 justify-center">
               <button 
                 onClick={() => handleAnswer(true)}
@@ -147,7 +149,8 @@ const ConstituencyPulse: React.FC = () => {
   const { showError } = useAuth();
   const [pincode, setPincode] = useState<string>('');
   const [data, setData] = useState<ConstituencyData | null>(null);
-  const [booths, setBooths] = useState<any[]>([]);
+  const [booths, setBooths] = useState<unknown[]>([]);
+
   const [loading, setLoading] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);
 
@@ -162,7 +165,8 @@ const ConstituencyPulse: React.FC = () => {
     setLoading(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-      const res = await fetch(`${baseUrl}/api/v1/constituency/${pincode}`);
+      const res = await fetch(`${baseUrl}/api/v1/intelligence/constituency/${pincode}`);
+
       
       if (res.status === 429) {
         showError("The Constituency Pulse engine is currently recalibrating. Autonomous failover is active, please retry in a moment.");
@@ -174,14 +178,16 @@ const ConstituencyPulse: React.FC = () => {
       setData(json);
 
       // Boost: Find nearby booths
-      const bRes = await fetch(`${baseUrl}/api/v1/booths/${pincode}`);
+      const bRes = await fetch(`${baseUrl}/api/v1/intelligence/booths/${pincode}`);
+
       if (bRes.ok) {
         const bData = await bRes.json();
         setBooths(bData);
       }
 
       // Boost: Save search event to Analytics/Firestore
-      await fetch(`${baseUrl}/api/v1/save-progress`, {
+      await fetch(`${baseUrl}/api/v1/simulation/save-progress`, {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: 'guest_pulse', score_data: { last_searched: pincode, area: json.name } })
@@ -339,7 +345,8 @@ export default function IntelligencePage() {
       }
     };
     fetchIntel();
-  }, []);
+  }, [showError]);
+
 
   return (
     <div className="min-h-screen bg-slate-950 pt-32 pb-20 px-6 overflow-hidden relative">
@@ -385,7 +392,8 @@ export default function IntelligencePage() {
                     <CheckCircle2 size={16} className="text-emerald-500" /> Past Elections & Results
                   </h4>
                   <div className="space-y-4 overflow-y-auto max-h-[700px] pr-3 scrollbar-thin scrollbar-thumb-emerald-500/20 hover:scrollbar-thumb-emerald-500/50 scrollbar-track-white/5 rounded-xl">
-                    {liveIntel.past_results?.map((event: any, i: number) => (
+                    {liveIntel.past_results?.map((event: ElectoralEvent, i: number) => (
+
                       <div 
                         key={`past-${i}`} 
                         onClick={() => setSelectedEvent(event)}
@@ -409,7 +417,8 @@ export default function IntelligencePage() {
                     <Calendar size={16} className="text-blue-500" /> Upcoming Elections
                   </h4>
                   <div className="space-y-4 overflow-y-auto max-h-[700px] pr-3 scrollbar-thin scrollbar-thumb-blue-500/20 hover:scrollbar-thumb-blue-500/50 scrollbar-track-white/5 rounded-xl">
-                    {liveIntel.upcoming_elections?.map((event: any, i: number) => (
+                    {liveIntel.upcoming_elections?.map((event: ElectoralEvent, i: number) => (
+
                       <div 
                         key={`upe-${i}`} 
                         onClick={() => setSelectedEvent(event)}
@@ -433,7 +442,7 @@ export default function IntelligencePage() {
                     <Zap size={16} className="text-amber-500" /> Upcoming Results
                   </h4>
                   <div className="space-y-4 overflow-y-auto max-h-[700px] pr-3 scrollbar-thin scrollbar-thumb-amber-500/20 hover:scrollbar-thumb-amber-500/50 scrollbar-track-white/5 rounded-xl">
-                    {liveIntel.upcoming_results?.map((event: any, i: number) => (
+                    {liveIntel.upcoming_results?.map((event: ElectoralEvent, i: number) => (
                       <div 
                         key={`upr-${i}`} 
                         onClick={() => setSelectedEvent(event)}
@@ -448,6 +457,7 @@ export default function IntelligencePage() {
                         </div>
                       </div>
                     ))}
+
                   </div>
                 </div>
 
@@ -547,7 +557,12 @@ export default function IntelligencePage() {
              <DocumentVerification />
           </div>
         </div>
+
+        <div className="mt-12">
+           <MythBuster />
+        </div>
       </div>
     </div>
+
   );
 }

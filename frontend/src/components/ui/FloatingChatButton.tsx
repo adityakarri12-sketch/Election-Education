@@ -1,7 +1,8 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, MessageSquare, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Bot, Zap } from 'lucide-react';
+
 import { useRouter, usePathname } from 'next/navigation';
 
 export const FloatingChatButton = () => {
@@ -18,8 +19,10 @@ export const FloatingChatButton = () => {
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
       onClick={() => router.push('/chat')}
+      aria-label="Open Electra AI Chat Assistant"
       className="fixed bottom-8 right-8 z-[999] group"
     >
+
       <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full group-hover:bg-primary/40 transition-all" />
       <div className="relative w-16 h-16 bg-slate-900 border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl transition-all group-hover:border-primary/50 group-hover:bg-slate-800">
         <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-lg flex items-center justify-center text-white shadow-lg animate-bounce">

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, XCircle, Info, ExternalLink } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 
 export const myths = [
   {
@@ -58,7 +58,8 @@ export function MythFactSection() {
               <XCircle className="text-red-500" size={24} />
               <span className="text-xs font-black uppercase tracking-widest text-slate-500">Myth</span>
             </div>
-            <p className="text-white font-bold mb-6 italic">"{item.myth}"</p>
+            <p className="text-white font-bold mb-6 italic">&ldquo;{item.myth}&rdquo;</p>
+
             <div className="h-px bg-white/10 mb-6" />
             <div className="flex items-center gap-3 mb-4">
               <CheckCircle2 className="text-emerald-500" size={24} />

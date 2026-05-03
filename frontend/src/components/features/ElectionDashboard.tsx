@@ -3,14 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, Legend
+  PieChart, Pie, Cell
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { 
   Users, UserPlus, Home, TrendingUp, 
-  Download, RefreshCw, Sparkles,
+  Download, Sparkles,
   Lock, Database, ShieldCheck, CheckCircle2, Trophy
 } from 'lucide-react';
+
+
 import { cn } from '@/lib/utils';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
@@ -37,9 +39,29 @@ const mockData = {
   ]
 };
 
+interface DashboardData {
+  summary: {
+    total_voters: string;
+    polling_stations: string;
+    female_voters: string;
+    first_time_voters: string;
+  };
+  turnout_history: { year: string; rate: number }[];
+  demographics: { name: string; value: number }[];
+}
+
+interface LeaderboardEntry {
+  username: string;
+  score: number;
+  role?: string;
+  accuracy?: number;
+}
+
+
 export const ElectionDashboard = () => {
-  const [data] = useState<any>(mockData);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [data] = useState<DashboardData>(mockData);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -47,14 +69,17 @@ export const ElectionDashboard = () => {
     const fetchLeaderboard = async () => {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-        const res = await fetch(`${baseUrl}/api/leaderboard`);
+        const res = await fetch(`${baseUrl}/api/v1/simulation/leaderboard`);
+
         if (res.ok) {
           const lb = await res.json();
           setLeaderboard(lb);
         }
-      } catch (e) {
-        console.error("Leaderboard fetch error:", e);
+      } catch {
+        console.error("Leaderboard fetch error");
       }
+
+
     };
     fetchLeaderboard();
   }, []);
@@ -71,9 +96,9 @@ export const ElectionDashboard = () => {
   );
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-16" role="main" id="main-content">
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6" role="region" aria-label="Dashboard Overview">
         <div>
           <h2 className="text-4xl font-black text-white tracking-tight">Real-Time <span className="text-gradient">Analysis.</span></h2>
           <p className="text-slate-400 mt-2">Aggregated constitutional and demographic data from verified sources.</p>
@@ -82,15 +107,16 @@ export const ElectionDashboard = () => {
           <button 
             suppressHydrationWarning
             onClick={downloadReport}
+            aria-label="Download Electoral Insight Report as PDF"
             className="px-8 py-4 bg-primary text-white rounded-2xl font-bold flex items-center gap-2 hover:scale-105 transition-all shadow-xl shadow-primary/20"
           >
-            <Download size={20} /> Download Report
+            <Download size={20} aria-hidden="true" /> Download Report
           </button>
         </div>
       </div>
 
       {/* QUICK STATS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" role="region" aria-label="Electoral Statistics Summary">
         {[
           { label: 'Total Voters', value: data.summary.total_voters, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
           { label: 'Polling Stations', value: data.summary.polling_stations, icon: Home, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
@@ -102,12 +128,14 @@ export const ElectionDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
             key={i}
+            role="article"
+            aria-labelledby={`stat-label-${i}`}
             className="group relative p-8 bg-white/5 border border-white/10 rounded-[2.5rem] overflow-hidden hover:bg-white/10 transition-all hover:shadow-[0_0_30px_rgba(59,130,246,0.05)]"
           >
             <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110", stat.bg, stat.color)}>
-              <stat.icon size={24} />
+              <stat.icon size={24} aria-hidden="true" />
             </div>
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">{stat.label}</p>
+            <p id={`stat-label-${i}`} className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">{stat.label}</p>
             <p className="text-3xl font-black text-white">{stat.value}</p>
           </motion.div>
         ))}
@@ -116,17 +144,17 @@ export const ElectionDashboard = () => {
       {/* MAIN CHARTS GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Participation Trend */}
-        <div className="lg:col-span-2 p-8 bg-slate-900/50 border border-white/10 rounded-[3rem] backdrop-blur-xl relative overflow-hidden group">
+        <div className="lg:col-span-2 p-8 bg-slate-900/50 border border-white/10 rounded-[3rem] backdrop-blur-xl relative overflow-hidden group" role="region" aria-label="Voter Participation Trends">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] pointer-events-none group-hover:bg-primary/10 transition-colors" />
           <div className="flex justify-between items-center mb-10 relative z-10">
             <h4 className="text-xl font-bold text-white flex items-center gap-2">
-              <TrendingUp size={20} className="text-primary" /> Participation Trend
+              <TrendingUp size={20} className="text-primary" aria-hidden="true" /> Participation Trend
             </h4>
           </div>
-          <div className="h-[400px] relative z-10">
+          <div className="h-[400px] relative z-10" aria-label="Line chart showing voter turnout from 2004 to 2024. Current rate is approximately 67%.">
             {isMounted && (
               <ResponsiveContainer width="100%" height="100%" minHeight={300}>
-                <AreaChart data={data.turnout_history} aria-label="Voter turnout history from 2004 to 2024">
+                <AreaChart data={data.turnout_history} aria-hidden="false">
                   <defs>
                     <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
@@ -145,18 +173,19 @@ export const ElectionDashboard = () => {
         </div>
 
         {/* Voter Age Groups */}
-        <div className="p-8 bg-slate-900/50 border border-white/10 rounded-[3rem] backdrop-blur-xl relative overflow-hidden group">
+        <div className="p-8 bg-slate-900/50 border border-white/10 rounded-[3rem] backdrop-blur-xl relative overflow-hidden group" role="region" aria-label="Demographic Distribution">
           <h4 className="text-xl font-bold text-white mb-10 flex items-center gap-2">
-            <Users size={20} className="text-amber-500" /> Voter Age Groups
+            <Users size={20} className="text-amber-500" aria-hidden="true" /> Voter Age Groups
           </h4>
-          <div className="h-[300px]">
+          <div className="h-[300px]" aria-label="Pie chart illustrating voter distribution by age. The largest segment is the 30 to 45 age group.">
             {isMounted && (
               <ResponsiveContainer width="100%" height="100%" minHeight={250}>
-                <PieChart aria-label="Voter age group distribution">
+                <PieChart>
                   <Pie data={data.demographics} cx="50%" cy="50%" innerRadius={80} outerRadius={110} paddingAngle={5} dataKey="value">
-                    {data.demographics && Array.isArray(data.demographics) && data.demographics.map((entry: any, index: number) => (
+                    {data.demographics && Array.isArray(data.demographics) && data.demographics.map((entry: { name: string; value: number }, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
+
                   </Pie>
                   <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #ffffff10', borderRadius: '16px' }} />
                 </PieChart>
@@ -164,15 +193,17 @@ export const ElectionDashboard = () => {
             )}
           </div>
           <div className="grid grid-cols-2 gap-4 mt-8">
-            {data.demographics && Array.isArray(data.demographics) && data.demographics.map((d: any, i: number) => (
+            {data.demographics && Array.isArray(data.demographics) && data.demographics.map((d: { name: string; value: number }, i: number) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i] }} />
+
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i] }} aria-hidden="true" />
                 <span className="text-xs text-slate-400">{d.name}: {d.value}%</span>
               </div>
             ))}
           </div>
         </div>
       </div>
+
 
       {/* NEW: REGIONAL ANALYSIS FLIP CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -236,7 +267,8 @@ export const ElectionDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {leaderboard.length > 0 ? leaderboard.map((user: any, i: number) => (
+          {leaderboard.length > 0 ? leaderboard.map((user: LeaderboardEntry, i: number) => (
+
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

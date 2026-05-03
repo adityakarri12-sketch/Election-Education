@@ -3,7 +3,8 @@
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { Footer } from '@/components/layout/Footer';
-import { Activity, ShieldCheck, BarChart3, Gauge } from 'lucide-react';
+import { Activity, BarChart3, Gauge } from 'lucide-react';
+
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 

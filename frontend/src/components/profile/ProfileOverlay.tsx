@@ -4,11 +4,14 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, User, Award, Bell, Settings, 
-  Shield, Mail, MapPin, CheckCircle2,
-  Lock, Save, LogOut
+  Shield, Mail,
+  Save, LogOut
 } from 'lucide-react';
+
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
+
 
 interface ProfileOverlayProps {
   isOpen: boolean;
@@ -53,9 +56,10 @@ export const ProfileOverlay = ({ isOpen, onClose, initialTab = 'settings' }: Pro
             {/* Sidebar */}
             <div className="w-full md:w-80 bg-white/5 border-r border-white/5 p-10 flex flex-col">
               <div className="flex items-center gap-4 mb-12">
-                <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-primary/50 shadow-xl shadow-primary/20">
-                  <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-primary/50 shadow-xl shadow-primary/20 relative">
+                  <Image src={user.avatar} alt="Profile" fill className="object-cover" />
                 </div>
+
                 <div>
                   <h3 className="font-black text-white text-lg tracking-tighter">{user.name}</h3>
                   <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{user.role}</p>
@@ -66,7 +70,8 @@ export const ProfileOverlay = ({ isOpen, onClose, initialTab = 'settings' }: Pro
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
+                    onClick={() => setActiveTab(tab.id as 'settings' | 'achievements' | 'notifications')}
+
                     className={cn(
                       "w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold transition-all",
                       activeTab === tab.id 

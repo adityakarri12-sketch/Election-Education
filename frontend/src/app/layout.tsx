@@ -20,7 +20,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+  manifest: "/manifest.json",
 };
+
 
 import { Suspense } from "react";
 import { FloatingChatButton } from "@/components/ui/FloatingChatButton";
@@ -29,6 +31,8 @@ import { AuthProvider } from "@/context/AuthContext";
 import { Navbar } from "@/components/layout/Navbar";
 import GAIntegration from "@/components/GoogleAnalytics";
 import "@/lib/firebase"; // Firebase Advanced Analytics & Core Services
+
+import { AccessibilityProvider } from "@/accessibility/AccessibilityProvider";
 
 export default function RootLayout({
   children,
@@ -41,7 +45,29 @@ export default function RootLayout({
       className={`${outfit.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
+      <head />
+
+      <body className="min-h-full flex flex-col">
+        <a 
+          href="#main-content" 
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-6 focus:py-3 focus:bg-primary focus:text-white focus:rounded-xl focus:font-bold outline-none"
+        >
+          Skip to main content
+        </a>
+        <Suspense fallback={null}>
+          <GAIntegration gaId={process.env.NEXT_PUBLIC_GA_ID || "G-ELECTION2026"} />
+        </Suspense>
+        <AccessibilityProvider>
+          <AuthProvider>
+            <Navbar />
+            <div id="main-content-wrapper">
+              {children}
+            </div>
+            <ConditionalFooter />
+            <FloatingChatButton />
+          </AuthProvider>
+        </AccessibilityProvider>
+
         <Script 
           src="https://accounts.google.com/gsi/client" 
           strategy="beforeInteractive"
@@ -65,34 +91,11 @@ export default function RootLayout({
           src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
           strategy="afterInteractive"
         />
-      </head>
-      <body className="min-h-full flex flex-col">
-        <Suspense fallback={null}>
-          <GAIntegration gaId={process.env.NEXT_PUBLIC_GA_ID || "G-ELECTION2026"} />
-        </Suspense>
-        <AuthProvider>
-          <Navbar />
-          {children}
-          <ConditionalFooter />
-          <FloatingChatButton />
-        </AuthProvider>
-        <Script
-          src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-          strategy="afterInteractive"
-        />
-        <Script id="google-translate-init" strategy="afterInteractive">
-          {`
-            function googleTranslateElementInit() {
-              new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'hi,en,te,ta,bn,mr,gu,kn,ml,pa',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false,
-              }, 'google_translate_element');
-            }
-          `}
-        </Script>
+
+
+
       </body>
     </html>
   );
 }
+
