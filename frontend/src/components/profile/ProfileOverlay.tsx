@@ -44,6 +44,10 @@ export const ProfileOverlay = ({ isOpen, onClose, initialTab = 'settings' }: Pro
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-overlay-title"
+            aria-describedby="profile-overlay-description"
             className="relative w-full max-w-5xl h-[80vh] bg-slate-900 border border-white/10 rounded-[3.5rem] overflow-hidden flex flex-col md:flex-row shadow-2xl"
           >
             {/* Sidebar */}
@@ -95,8 +99,8 @@ export const ProfileOverlay = ({ isOpen, onClose, initialTab = 'settings' }: Pro
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
                     >
-                      <h2 className="text-4xl font-black text-white mb-2 tracking-tighter">Profile Settings</h2>
-                      <p className="text-slate-500 mb-12">Manage your democratic identity and preferences.</p>
+                      <h2 id="profile-overlay-title" className="text-4xl font-black text-white mb-2 tracking-tighter">Profile Settings</h2>
+                      <p id="profile-overlay-description" className="text-slate-500 mb-12">Manage your democratic identity and preferences.</p>
 
                       <div className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

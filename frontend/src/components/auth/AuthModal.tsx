@@ -113,6 +113,10 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auth-modal-title"
+            aria-describedby="auth-modal-description"
             className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-[3rem] overflow-hidden shadow-2xl"
           >
             {/* Header Gradient */}
@@ -132,10 +136,10 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                     <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center text-primary mx-auto mb-6">
                       <ShieldCheck size={32} />
                     </div>
-                    <h2 className="text-3xl font-black text-white mb-2 tracking-tighter">
+                    <h2 id="auth-modal-title" className="text-3xl font-black text-white mb-2 tracking-tighter">
                       {isLogin ? 'Welcome Back' : 'Join ElectraLearn'}
                     </h2>
-                    <p className="text-slate-500 text-sm">
+                    <p id="auth-modal-description" className="text-slate-500 text-sm">
                       {isLogin ? 'Continue your democratic journey' : 'Start your educational intelligence path'}
                     </p>
                   </div>
