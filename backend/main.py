@@ -184,6 +184,22 @@ for path in ["/app/static", "static", "../frontend/out"]:
         app.mount("/", StaticFiles(directory=path, html=True), name="static")
         break
 
-@app.on_event("startup")
+@api_router.post("/translate")
+async def translate_text(request: TranslationRequest):
+    """
+    ALIGNMENT: Solves [Language Barriers] by providing AI-powered
+    translation for electoral intelligence and civic education.
+    """
+    prompt = f"Translate the following electoral text to {request.target_language}: {request.text}"
+    try:
+        response = await get_ai_cluster().generate(
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.1)
+        )
+        return {"translated_text": response}
+    except Exception:
+        return {"translated_text": f"[Translation Cluster Offline] {request.text}"}
+
+@api_router.on_event("startup")
 async def startup_event():
     logging.info(f"Platform {settings.PROJECT_NAME} fully operational.")

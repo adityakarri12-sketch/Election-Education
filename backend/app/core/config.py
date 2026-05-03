@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     """
     PROJECT_NAME: str = "ElectraLearn Intelligence"
     PROJECT_ID: str = "refreshing-gear-495005-s0"
-    API_V1_STR: str = "/api"
+    API_V1_STR: str = "/api/v1"
     
     # AI Cluster Configuration
     GEMINI_API_KEYS: str = os.getenv("VITE_GEMINI_API_KEY", "")
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
         return [k.strip() for k in self.GEMINI_API_KEYS.split(",") if k.strip()]
 
     # Security Configuration
-    ALLOWED_HOSTS: List[str] = ["*"]
+    ALLOWED_HOSTS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "https://election-platform-396628837152.us-central1.run.app", "*"]
     SECRET_KEY: str = os.getenv("SECRET_KEY", "platform_integrity_secret_2026")
     
     # Cache Configuration

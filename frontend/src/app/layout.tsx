@@ -76,6 +76,22 @@ export default function RootLayout({
           <ConditionalFooter />
           <FloatingChatButton />
         </AuthProvider>
+        <Script
+          src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+          strategy="afterInteractive"
+        />
+        <Script id="google-translate-init" strategy="afterInteractive">
+          {`
+            function googleTranslateElementInit() {
+              new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'hi,en,te,ta,bn,mr,gu,kn,ml,pa',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false,
+              }, 'google_translate_element');
+            }
+          `}
+        </Script>
       </body>
     </html>
   );

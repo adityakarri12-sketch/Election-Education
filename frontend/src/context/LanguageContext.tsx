@@ -41,7 +41,8 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     if (currentLanguage.code === 'en') return text;
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/translate`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+      const response = await fetch(`${baseUrl}/api/v1/translate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, target_lang: currentLanguage.code })

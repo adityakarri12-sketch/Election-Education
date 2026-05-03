@@ -48,10 +48,11 @@ export const FlipCard = ({ title, description, details, icon: Icon }: FlipCardPr
     setIsTranslating(true);
     try {
       const translated = await Promise.all(details.map(async (text) => {
-        const res = await fetch('/api/translate', {
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+        const res = await fetch(`${baseUrl}/api/v1/translate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, target_language: 'hi' }) // Default to Hindi for demo
+          body: JSON.stringify({ text, target_language: 'hi' })
         });
         const data = await res.json();
         return data.translated_text;

@@ -330,7 +330,8 @@ export default function IntelligencePage() {
           const data = await res.json();
           setLiveIntel(data);
         } else {
-          throw new Error('Intelligence Fetch Failed');
+          console.error(`Intelligence Fetch Status: ${res.status}`);
+          throw new Error(`Intelligence Fetch Failed with status ${res.status}`);
         }
       } catch (e) {
         console.error("Intelligence Fetch Error:", e);
