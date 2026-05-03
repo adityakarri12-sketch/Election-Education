@@ -37,7 +37,7 @@ export const DocumentVerification = () => {
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-      const res = await fetch(`${baseUrl}/api/verify-id`, {
+      const res = await fetch(`${baseUrl}/api/v1/verify-id`, {
         method: 'POST',
         body: formData,
       });

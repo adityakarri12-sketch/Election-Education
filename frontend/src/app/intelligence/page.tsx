@@ -162,7 +162,7 @@ const ConstituencyPulse: React.FC = () => {
     setLoading(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-      const res = await fetch(`${baseUrl}/api/constituency/${pincode}`);
+      const res = await fetch(`${baseUrl}/api/v1/constituency/${pincode}`);
       
       if (res.status === 429) {
         showError("The Constituency Pulse engine is currently recalibrating. Autonomous failover is active, please retry in a moment.");
@@ -174,14 +174,14 @@ const ConstituencyPulse: React.FC = () => {
       setData(json);
 
       // Boost: Find nearby booths
-      const bRes = await fetch(`${baseUrl}/api/booths/${pincode}`);
+      const bRes = await fetch(`${baseUrl}/api/v1/booths/${pincode}`);
       if (bRes.ok) {
         const bData = await bRes.json();
         setBooths(bData);
       }
 
       // Boost: Save search event to Analytics/Firestore
-      await fetch(`${baseUrl}/api/save-progress`, {
+      await fetch(`${baseUrl}/api/v1/save-progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: 'guest_pulse', score_data: { last_searched: pincode, area: json.name } })
@@ -325,7 +325,7 @@ export default function IntelligencePage() {
     const fetchIntel = async () => {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-        const res = await fetch(`${baseUrl}/api/intelligence/live`);
+        const res = await fetch(`${baseUrl}/api/v1/intelligence/live`);
         if (res.ok) {
           const data = await res.json();
           setLiveIntel(data);
